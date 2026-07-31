@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Banking Management System</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>🏦 Banking Management System</h1>
+
+      <h2>Open Account</h2>
+
+      <form id="accountForm">
+        <input
+          type="text"
+          id="customerName"
+          placeholder="Customer Name"
+          required />
+
+        <input type="text" id="mobile" placeholder="Mobile Number" required />
+
+        <input type="text" id="address" placeholder="Address" required />
+
+        <select id="accountType">
+          <option value="Saving">Saving</option>
+          <option value="Current">Current</option>
+        </select>
+
+        <input
+          type="number"
+          id="openingBalance"
+          placeholder="Opening Balance"
+          required />
+
+        <button type="submit">Open Account</button>
+      </form>
+
+      <hr />
+
+      <input type="number" id="depositAccount" placeholder="Account Number" />
+
+      <input type="number" id="depositAmount" placeholder="Amount" />
+
+      <button type="button" onclick="deposit()">Deposit</button>
+
+      <hr />
+
+      <h2>Withdraw Money</h2>
+
+      <input type="number" id="withdrawAccount" placeholder="Account Number" />
+
+      <input type="number" id="withdrawAmount" placeholder="Withdraw Amount" />
+
+      <button onclick="withdraw()">Withdraw</button>
+
+      <hr />
+      <h2>Balance Enquiry</h2>
+
+      <input type="number" id="balanceAccount" placeholder="Account Number" />
+
+      <button onclick="checkBalance()">Check Balance</button>
+      <hr />
+
+      <h2>Fund Transfer</h2>
+
+      <input type="number" id="fromAccount" placeholder="From Account Number" />
+
+      <input type="number" id="toAccount" placeholder="To Account Number" />
+
+      <input type="number" id="transferAmount" placeholder="Transfer Amount" />
+
+      <button onclick="transferMoney()">Transfer</button>
+      <hr />
+      <h2>Loan Management</h2>
+
+      <input type="number" id="loanAccount" placeholder="Account Number" />
+
+      <input type="number" id="loanAmount" placeholder="Loan Amount" />
+
+      <button onclick="applyLoan()">Apply Loan</button>
+
+      <hr />
+
+      <h2>Mini Statement</h2>
+
+      <input type="number" id="statementAccount" placeholder="Account Number" />
+
+      <button onclick="showStatement()">Show Statement</button>
+
+      <div id="statement"></div>
+      <hr />
+
+      <h2>Interest Calculation</h2>
+
+      <input type="number" id="interestAccount" placeholder="Account Number" />
+
+      <button onclick="calculateInterest()">Calculate Interest</button>
+
+      <div id="interestResult"></div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
+</html>
