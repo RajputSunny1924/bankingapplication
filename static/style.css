@@ -25,25 +25,19 @@ body {
 /* =========================
    SIDEBAR
 ========================= */
-
 .sidebar {
   width: 250px;
-
   background: #0f172a;
-
   color: white;
-
   padding: 20px;
 
   position: fixed;
-
   top: 0;
-
   left: 0;
-
   bottom: 0;
-}
 
+  overflow-y: auto;
+}
 .sidebar h1 {
   text-align: center;
 

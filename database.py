@@ -1,210 +1,279 @@
-import oracledb
+from pymongo import MongoClient
+from datetime import datetime
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-try:
-    connection = oracledb.connect(
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        dsn=os.getenv("DB_DSN")
-    )
 
-    print("✅ Oracle Connected Successfully")
+# MongoDB connection
+client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017/"))
 
-except Exception as e:
-    print("Connection Error:", e)
+db = client["banking_management"]
+
+accounts_collection = db["accounts"]
+transactions_collection = db["transactions"]
+loans_collection = db["loans"]
 
 
-def create_account(account_no, customer_name, mobile, address, account_type, balance):
+# -----------------------------
+# CREATE ACCOUNT
+# -----------------------------
 
-    cursor = connection.cursor()
+def create_account(
+    account_no,
+    customer_name,
+    mobile,
+    address,
+    account_type,
+    balance
+):
+    # Check if account already exists
+    existing_account = accounts_collection.find_one({
+        "account_no": account_no
+    })
 
-    sql = """
-    INSERT INTO ACCOUNT
-    (ACCOUNT_NO, CUSTOMER_NAME, MOBILE, ADDRESS, ACCOUNT_TYPE, BALANCE)
-    VALUES (:1, :2, :3, :4, :5, :6)
-    """
+    if existing_account:
+        raise ValueError("Account Already Exists")
 
-    cursor.execute(sql, (
-        account_no,
-        customer_name,
-        mobile,
-        address,
-        account_type,
-        balance
-    ))
+    account = {
+        "account_no": account_no,
+        "customer_name": customer_name,
+        "mobile": mobile,
+        "address": address,
+        "account_type": account_type,
+        "balance": float(balance)
+    }
 
-    connection.commit()
-
-    cursor.close()
+    accounts_collection.insert_one(account)
 
     return True
+
+
+# -----------------------------
+# DEPOSIT MONEY
+# -----------------------------
+
 def deposit_money(account_no, amount):
-    cursor = connection.cursor()
 
-    sql = """
-    UPDATE ACCOUNT
-    SET BALANCE = BALANCE + :1
-    WHERE ACCOUNT_NO = :2
-    """
+    if amount <= 0:
+        raise ValueError("Invalid Amount")
 
-    cursor.execute(sql, (amount, account_no))
+    account = accounts_collection.find_one({
+        "account_no": account_no
+    })
 
-    cursor.execute("SELECT NVL(MAX(TRANSACTION_ID),0)+1 FROM TRANSACTIONS")
-    transaction_id = cursor.fetchone()[0]
+    if account is None:
+        raise ValueError("Account Not Found")
 
-    cursor.execute("""
-    INSERT INTO TRANSACTIONS
-    (TRANSACTION_ID, ACCOUNT_NO, TRANSACTION_TYPE, AMOUNT, TRANSACTION_DATE)
-    VALUES (:1, :2, :3, :4, SYSDATE)
-    """, (
-        transaction_id,
-        account_no,
-        "Deposit",
-        amount
-    ))
+    # Add money to account
+    accounts_collection.update_one(
+        {"account_no": account_no},
+        {"$inc": {"balance": float(amount)}}
+    )
 
-    connection.commit()
-    cursor.close()
+    # Save transaction
+    transactions_collection.insert_one({
+        "account_no": account_no,
+        "transaction_type": "Deposit",
+        "amount": float(amount),
+        "transaction_date": datetime.now()
+    })
+
+
+# -----------------------------
+# WITHDRAW MONEY
+# -----------------------------
+
 def withdraw_money(account_no, amount):
-    cursor = connection.cursor()
 
-    sql = """
-    UPDATE ACCOUNT
-    SET BALANCE = BALANCE - :1
-    WHERE ACCOUNT_NO = :2
-    """
+    if amount <= 0:
+        raise ValueError("Invalid Amount")
 
-    cursor.execute(sql, (amount, account_no))
+    account = accounts_collection.find_one({
+        "account_no": account_no
+    })
 
-    cursor.execute("SELECT NVL(MAX(TRANSACTION_ID),0)+1 FROM TRANSACTIONS")
-    transaction_id = cursor.fetchone()[0]
+    if account is None:
+        raise ValueError("Account Not Found")
 
-    cursor.execute("""
-    INSERT INTO TRANSACTIONS
-    (TRANSACTION_ID, ACCOUNT_NO, TRANSACTION_TYPE, AMOUNT, TRANSACTION_DATE)
-    VALUES (:1, :2, :3, :4, SYSDATE)
-    """, (
-        transaction_id,
-        account_no,
-        "Withdrawal",
-        amount
-    ))
+    balance = float(account["balance"])
 
-    connection.commit()
-    cursor.close()
+    if balance < amount:
+        raise ValueError("Insufficient Balance")
+
+    # Remove money
+    accounts_collection.update_one(
+        {"account_no": account_no},
+        {"$inc": {"balance": -float(amount)}}
+    )
+
+    # Save transaction
+    transactions_collection.insert_one({
+        "account_no": account_no,
+        "transaction_type": "Withdrawal",
+        "amount": float(amount),
+        "transaction_date": datetime.now()
+    })
+
+
+# -----------------------------
+# CHECK BALANCE
+# -----------------------------
 
 def check_balance(account_no):
 
-    cursor = connection.cursor()
+    account = accounts_collection.find_one({
+        "account_no": account_no
+    })
 
-    sql = """
-    SELECT BALANCE
-    FROM ACCOUNT
-    WHERE ACCOUNT_NO = :1
-    """
+    if account is None:
+        return None
 
-    cursor.execute(sql, (account_no,))
+    # Return tuple like the old MySQL version
+    return (account["balance"],)
 
-    balance = cursor.fetchone()
 
-    cursor.close()
-
-    return balance
-
+# -----------------------------
+# FUND TRANSFER
+# -----------------------------
 
 def fund_transfer(from_account, to_account, amount):
 
-    cursor = connection.cursor()
+    if from_account == to_account:
+        raise ValueError("Cannot transfer to same account")
 
-    # Sender ke account se paise minus
-    cursor.execute("""
-    UPDATE ACCOUNT
-    SET BALANCE = BALANCE - :1
-    WHERE ACCOUNT_NO = :2
-    """, (amount, from_account))
+    if amount <= 0:
+        raise ValueError("Invalid Amount")
 
-    # Receiver ke account me paise add
-    cursor.execute("""
-    UPDATE ACCOUNT
-    SET BALANCE = BALANCE + :1
-    WHERE ACCOUNT_NO = :2
-    """, (amount, to_account))
+    # Check sender
+    sender = accounts_collection.find_one({
+        "account_no": from_account
+    })
 
-    connection.commit()
+    if sender is None:
+        raise ValueError("Sender Account Not Found")
 
-    cursor.close()
+    # Check receiver
+    receiver = accounts_collection.find_one({
+        "account_no": to_account
+    })
+
+    if receiver is None:
+        raise ValueError("Receiver Account Not Found")
+
+    sender_balance = float(sender["balance"])
+
+    if sender_balance < amount:
+        raise ValueError("Insufficient Balance")
+
+    # Remove money from sender
+    accounts_collection.update_one(
+        {"account_no": from_account},
+        {"$inc": {"balance": -float(amount)}}
+    )
+
+    # Add money to receiver
+    accounts_collection.update_one(
+        {"account_no": to_account},
+        {"$inc": {"balance": float(amount)}}
+    )
+
+    # Sender transaction
+    transactions_collection.insert_one({
+        "account_no": from_account,
+        "transaction_type": "Transfer Sent",
+        "amount": float(amount),
+        "transaction_date": datetime.now()
+    })
+
+    # Receiver transaction
+    transactions_collection.insert_one({
+        "account_no": to_account,
+        "transaction_type": "Transfer Received",
+        "amount": float(amount),
+        "transaction_date": datetime.now()
+    })
+
+
+# -----------------------------
+# APPLY LOAN
+# -----------------------------
 
 def apply_loan(account_no, loan_amount):
 
-    cursor = connection.cursor()
+    account = accounts_collection.find_one({
+        "account_no": account_no
+    })
 
-    # Generate next loan id
-    cursor.execute("SELECT NVL(MAX(LOAN_ID),0)+1 FROM LOAN")
-    loan_id = cursor.fetchone()[0]
+    if account is None:
+        raise ValueError("Account Not Found")
 
-    sql = """
-    INSERT INTO LOAN
-    (LOAN_ID, ACCOUNT_NO, LOAN_AMOUNT, INTEREST_RATE, LOAN_STATUS)
-    VALUES (:1, :2, :3, :4, :5)
-    """
+    if loan_amount <= 0:
+        raise ValueError("Invalid Loan Amount")
 
-    cursor.execute(sql, (
-        loan_id,
-        account_no,
-        loan_amount,
-        8.5,
-        "Pending"
-    ))
+    loan = {
+        "account_no": account_no,
+        "loan_amount": float(loan_amount),
+        "interest_rate": 8.5,
+        "loan_status": "Pending",
+        "loan_date": datetime.now()
+    }
 
-    connection.commit()
+    loans_collection.insert_one(loan)
 
-    cursor.close()
 
+# -----------------------------
+# MINI STATEMENT
+# -----------------------------
 
 def mini_statement(account_no):
 
-    cursor = connection.cursor()
+    transactions = transactions_collection.find(
+        {
+            "account_no": account_no
+        },
+        {
+            "_id": 0,
+            "transaction_type": 1,
+            "amount": 1,
+            "transaction_date": 1
+        }
+    ).sort("transaction_date", -1)
 
-    sql = """
-    SELECT TRANSACTION_TYPE, AMOUNT, TRANSACTION_DATE
-    FROM TRANSACTIONS
-    WHERE ACCOUNT_NO = :1
-    ORDER BY TRANSACTION_DATE DESC
-    """
+    data = []
 
-    cursor.execute(sql, (account_no,))
-
-    data = cursor.fetchall()
-
-    cursor.close()
+    for transaction in transactions:
+        data.append((
+            transaction.get("transaction_type"),
+            transaction.get("amount"),
+            transaction.get("transaction_date")
+        ))
 
     return data
 
+
+# -----------------------------
+# CALCULATE INTEREST
+# -----------------------------
+
 def calculate_interest(account_no):
-    cursor = connection.cursor()
 
-    sql = """
-    SELECT BALANCE
-    FROM ACCOUNT
-    WHERE ACCOUNT_NO = :1
-    """
+    account = accounts_collection.find_one({
+        "account_no": account_no
+    })
 
-    cursor.execute(sql, (account_no,))
-    balance = cursor.fetchone()
-
-    if balance is None:
-        cursor.close()
+    if account is None:
         return None
 
-    interest = balance[0] * 0.04   # 4% Annual Interest
+    balance = float(account["balance"])
 
-    cursor.close()
+    interest = balance * 0.04
+
+    total_balance = balance + interest
 
     return {
-        "balance": balance[0],
+        "balance": balance,
         "interest": interest,
-        "total_balance": balance[0] + interest
+        "total_balance": total_balance
     }

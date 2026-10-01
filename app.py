@@ -1,7 +1,8 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
+
 from database import (
-    create_account, 
+    create_account,
     deposit_money,
     withdraw_money,
     check_balance,
@@ -13,8 +14,6 @@ from database import (
 
 app = Flask(__name__)
 CORS(app)
-
-app = Flask(__name__)
 
 
 @app.route("/")
@@ -38,6 +37,7 @@ def create():
 
     return jsonify({"message": "Account Created Successfully"})
 
+
 @app.route("/deposit", methods=["POST"])
 def deposit():
 
@@ -49,6 +49,7 @@ def deposit():
     )
 
     return jsonify({"message": "Money Deposited Successfully"})
+
 
 @app.route("/withdraw", methods=["POST"])
 def withdraw():
@@ -62,6 +63,7 @@ def withdraw():
 
     return jsonify({"message": "Money Withdrawn Successfully"})
 
+
 @app.route("/balance", methods=["POST"])
 def balance():
 
@@ -72,6 +74,7 @@ def balance():
     return jsonify({
         "balance": balance[0]
     })
+
 
 @app.route("/transfer", methods=["POST"])
 def transfer():
@@ -86,6 +89,7 @@ def transfer():
 
     return jsonify({"message": "Money Transferred Successfully"})
 
+
 @app.route("/loan", methods=["POST"])
 def loan():
 
@@ -98,6 +102,7 @@ def loan():
 
     return jsonify({"message": "Loan Applied Successfully"})
 
+
 @app.route("/statement", methods=["POST"])
 def statement():
 
@@ -107,8 +112,10 @@ def statement():
 
     return jsonify(records)
 
+
 @app.route("/interest", methods=["POST"])
 def interest():
+
     data = request.get_json()
 
     result = calculate_interest(data["account_no"])
@@ -118,6 +125,6 @@ def interest():
 
     return jsonify(result)
 
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
-

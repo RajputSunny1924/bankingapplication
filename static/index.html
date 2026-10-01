@@ -3,82 +3,93 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>Banking Management System</title>
+
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='style.css') }}" />
   </head>
+
   <body>
+    <!-- MENU -->
     <div id="menu">
-      <h1>Banking Management System</h1>
+      <h1>🏦 Banking Management System</h1>
 
-      <button onclick="showSection('openAccount')">Open Account</button>
+      <button onclick="showSection('openAccount')">👤 Open Account</button>
 
-      <button onclick="showSection('deposit')">Deposit Money</button>
+      <button onclick="showSection('deposit')">💰 Deposit Money</button>
 
-      <button onclick="showSection('withdraw')">Withdraw Money</button>
+      <button onclick="showSection('withdraw')">💸 Withdraw Money</button>
 
-      <button onclick="showSection('balance')">Balance Enquiry</button>
+      <button onclick="showSection('balance')">📄 Balance Enquiry</button>
 
-      <button onclick="showSection('transfer')">Fund Transfer</button>
+      <button onclick="showSection('transfer')">🔄 Fund Transfer</button>
 
-      <button onclick="showSection('loan')">Loan Management</button>
+      <button onclick="showSection('loan')">💳 Loan Management</button>
 
-      <button onclick="showSection('statement')">Mini Statement</button>
+      <button onclick="showSection('statement')">📜 Mini Statement</button>
 
-      <button onclick="showSection('interest')">Interest Calculation</button>
-
-      <div id="openAccount" class="section">
-        <h2>Open Account</h2>
-
-        <form id="accountForm">
-          <h2>Open Account</h2>
-
-          <form id="accountForm">
-            <input
-              type="text"
-              id="customerName"
-              placeholder="Customer Name"
-              required />
-
-            <input
-              type="text"
-              id="mobile"
-              placeholder="Mobile Number"
-              required />
-
-            <input type="text" id="address" placeholder="Address" required />
-
-            <select id="accountType">
-              <option value="Saving">Saving</option>
-              <option value="Current">Current</option>
-            </select>
-
-            <input
-              type="number"
-              id="openingBalance"
-              placeholder="Opening Balance"
-              required />
-
-            <button type="submit">Open Account</button>
-        </form>
-
-        <button onclick="showMenu()">⬅ Back</button>
-      </div>
-       <div id="deposit" class="section">
-
-    <h2>Deposit Money</h2>
-
-    <input id="depositAccount">
-
-    <input id="depositAmount">
-
-    <button onclick="deposit()">Deposit</button>
-
-    <button onclick="showMenu()">⬅ Back</button>
-
+      <button onclick="showSection('interest')">📈 Interest Calculation</button>
     </div>
 
+    <!-- ========================= -->
+    <!-- OPEN ACCOUNT -->
+    <!-- ========================= -->
+
+    <div id="openAccount" class="section">
+      <h2>Open Account</h2>
+
+      <form id="accountForm">
+        <input
+          type="text"
+          id="customerName"
+          placeholder="Customer Name"
+          required />
+
+        <input type="text" id="mobile" placeholder="Mobile Number" required />
+
+        <input type="text" id="address" placeholder="Address" required />
+
+        <select id="accountType">
+          <option value="Saving">Saving</option>
+
+          <option value="Current">Current</option>
+        </select>
+
+        <input
+          type="number"
+          id="openingBalance"
+          placeholder="Opening Balance"
+          required />
+
+        <button type="submit">Open Account</button>
+      </form>
+
+      <button onclick="showMenu()">⬅ Back</button>
+    </div>
+
+    <!-- ========================= -->
+    <!-- DEPOSIT -->
+    <!-- ========================= -->
+
+    <div id="deposit" class="section">
+      <h2>Deposit Money</h2>
+
+      <input type="number" id="depositAccount" placeholder="Account Number" />
+
+      <input type="number" id="depositAmount" placeholder="Deposit Amount" />
+
+      <button onclick="deposit()">Deposit</button>
+
+      <button onclick="showMenu()">⬅ Back</button>
+    </div>
+
+    <!-- ========================= -->
+    <!-- WITHDRAW -->
+    <!-- ========================= -->
+
+    <div id="withdraw" class="section">
       <h2>Withdraw Money</h2>
 
       <input type="number" id="withdrawAccount" placeholder="Account Number" />
@@ -87,14 +98,28 @@
 
       <button onclick="withdraw()">Withdraw</button>
 
-      <hr />
+      <button onclick="showMenu()">⬅ Back</button>
+    </div>
+
+    <!-- ========================= -->
+    <!-- BALANCE -->
+    <!-- ========================= -->
+
+    <div id="balance" class="section">
       <h2>Balance Enquiry</h2>
 
       <input type="number" id="balanceAccount" placeholder="Account Number" />
 
       <button onclick="checkBalance()">Check Balance</button>
-      <hr />
 
+      <button onclick="showMenu()">⬅ Back</button>
+    </div>
+
+    <!-- ========================= -->
+    <!-- FUND TRANSFER -->
+    <!-- ========================= -->
+
+    <div id="transfer" class="section">
       <h2>Fund Transfer</h2>
 
       <input type="number" id="fromAccount" placeholder="From Account Number" />
@@ -104,7 +129,15 @@
       <input type="number" id="transferAmount" placeholder="Transfer Amount" />
 
       <button onclick="transferMoney()">Transfer</button>
-      <hr />
+
+      <button onclick="showMenu()">⬅ Back</button>
+    </div>
+
+    <!-- ========================= -->
+    <!-- LOAN -->
+    <!-- ========================= -->
+
+    <div id="loan" class="section">
       <h2>Loan Management</h2>
 
       <input type="number" id="loanAccount" placeholder="Account Number" />
@@ -113,25 +146,47 @@
 
       <button onclick="applyLoan()">Apply Loan</button>
 
-      <hr />
+      <button onclick="showMenu()">⬅ Back</button>
+    </div>
 
+    <!-- ========================= -->
+    <!-- MINI STATEMENT -->
+    <!-- ========================= -->
+
+    <div id="statement" class="section">
       <h2>Mini Statement</h2>
 
       <input type="number" id="statementAccount" placeholder="Account Number" />
 
       <button onclick="showStatement()">Show Statement</button>
 
-      <div id="statement"></div>
-      <hr />
+      <div id="statementResult"></div>
 
+      <button onclick="showMenu()">⬅ Back</button>
+    </div>
+
+    <!-- ========================= -->
+    <!-- INTEREST -->
+    <!-- ========================= -->
+    <div id="interest" class="section">
       <h2>Interest Calculation</h2>
 
-      <input type="number" id="interestAccount" placeholder="Account Number" />
+      <div class="form-box">
+        <label>Account Number</label>
 
-      <button onclick="calculateInterest()">Calculate Interest</button>
+        <input
+          type="number"
+          id="interestAccount"
+          placeholder="Enter Account Number" />
 
-      <div id="interestResult"></div>
+        <button id="calculateInterestBtn">Calculate Interest</button>
+
+        <div id="interestResult"></div>
+      </div>
     </div>
+
+    <!-- JAVASCRIPT -->
+
     <script src="{{ url_for('static', filename='script.js') }}"></script>
   </body>
 </html>
